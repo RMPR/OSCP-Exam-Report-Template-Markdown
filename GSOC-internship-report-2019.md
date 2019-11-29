@@ -6,6 +6,7 @@ date: "2019-11-04"
 subject: "Markdown"
 keywords: [smbcmp, wireshark, tshark, capture]
 subtitle: "Improve smbcmp the capture diff tool"
+lof: true
 lang: "en"
 titlepage: true
 titlepage-color: "1E90FF"
@@ -22,14 +23,14 @@ margin-right: 55px
 margin-bottom: 100px
 ---
 
-# Introduction
+# Preamble
 
 ## Acknowledgement
 I would like to express my deepest appreciation to all those who provided me the possibility to complete this report.
 First thing first my parents, without who I wouldn't even exist in the first
 place and logically God Who makes all things possible.
 A special gratitude goes to my mentor, Mr Aurelien Aptel for his time taken to explain things to me, for cleaning up and correcting errors that I might have missed otherwise.
-Furthermore I would also like to acknowledge with much appreciation the crucial role of my teachers, especially Mr KOUAMOU Georges, who gave me the basics in algorithms needed to achieve my work specifically the algorithms I had to develop during this internship.
+Furthermore I would also like to acknowledge with much appreciation the crucial role of my teachers, especially Mr KOUAMOU Georges, who gave me the basics in algorithms needed to achieve my work, specifically the algorithms I had to develop during this internship.
 A special thanks goes to my family, friends and classmates who helped me in their own ways by providing support, empathy and courage to go through all that.
 
 ## Sigles et abbreviations
@@ -42,23 +43,23 @@ A special thanks goes to my family, friends and classmates who helped me in thei
 - **CIFS**: Common Internet File System
 
 ## Abstract
-Smbcmp is a cli tool for making diffs between two pcap files containing SMB packets and rendering them using curses.
-The first part of the project consisted in making better diffs by using the pdml output of Tshark and the second part consisted in adding a GUI and port it to windows. More details in the [Appendix A](#appendix-a---proposal)
+Smbcmp is a CLI tool for making diffs between two pcap files containing SMB packets and rendering them using ncurses.
+The first part of the project consisted in making better diffs by using the PDML output of Tshark and the second part consisted in adding a GUI and port it to windows. More details in the [Appendix A](#appendix-a---proposal)
+
 
 ## Résumé
 Smbcmp est un outil en ligne de commandes permettant de visualiser les différences entre deux fichiers pcap contenant des paquets SMB et de les afficher à l'aide de la bibliotheque ncurses .
-La première partie du projet consistait à améliorer les différences en utilisant la sortie pdml de Tshark et la seconde à ajouter une interface graphique et à creer une version pour Windows. Plus de details sur la 
+La première partie du projet consistait à améliorer les différences en utilisant la sortie PDML de Tshark et la seconde à ajouter une interface graphique et à creer une version pour Windows. Plus de details sur la 
 proposition dans l'[appendice A](#appendix-a---proposal)
 
-## List of figures
 
 ## General Introduction
 SMB is a protocol providing shared access to files, printers, and serial ports 
-between nodes on a network, one version of SMB was also known as CIFS. It also 
+between nodes on a network, one version of SMB was known as CIFS. It also 
 provides an authenticated inter-process communication mechanism. Most usage of 
 SMB involves computers running Microsoft Windows, where it was known as 
 "Microsoft Windows Network" before the introduction of Active Directory.
-more than 70%, knowing how to troubleshoot connectivity problems can be 
+Knowing how to troubleshoot connectivity problems can be 
 cumbersome, hence network sniffers like Wireshark/Tshark and many others. While 
 this may be considered as good enough by many, the problem of comparison arise 
 very quickly, i.e. the ability to know between two situations what exactly went 
@@ -106,7 +107,7 @@ created and released for the use and benefit of all.
 
 ### History
 The idea for the Summer of Code came directly from Google's founders, Sergey 
-Brin and Larry Page.[@noauthor_google_2019] From 2007 until 2009 Leslie Hawthorn, who has been 
+Brin and Larry Page.[@GoogleSummerCode2019] From 2007 until 2009 Leslie Hawthorn, who has been 
 involved in the project since 2006, was the program manager. From 2010 until 
 2015, Carol Smith was the program manager. In 2016, Stephanie Taylor took 
 over management of the program. 
@@ -122,7 +123,7 @@ organization. Approximately 80% of the projects were successfully completed
 in 2005, although completion rates varied by organization: Ubuntu, for example, 
 reported a completion rate of only 64%, and KDE reported a 67% completion rate. Many projects were continued past summer, even though the SOC period was over, and some changed direction as they developed.
 
-For the first Summer of Code, Google was criticized for not giving sufficient time to open source organizations so they could plan projects for the Summer of Code. Despite these criticisms there were 41 organizations involved, including FreeBSD, Apache, KDE, Ubuntu, Blender, Mozdev, and Google itself.
+For the first Summer of Code, Google was criticized for not giving sufficient time to open source organizations so they could plan projects for the Summer of Code. Despite these criticisms there were 41 organizations involved, including FreeBSD, Apache, KDE, Ubuntu, Blender, Mozdev, and Google it
 
 According to a blog post by Chris DiBona, Google's open source program manager, 
 "something like 30 percent of the students stuck with their groups past SoC 
@@ -309,16 +310,17 @@ Coding Dates: May 1st - September 8th
 82% overall student success rate 
 
 In Cameroon, the university of Buea is the most represented institution with 37
-students coming from the institution since the beginning of the program in 2015.
+students coming from it since the beginning of the program in 2015.
 
 # State of the art of capture files diff tools
 
 ## Introduction
 Let's say we have a network of computers with active directory configured, for
 one reason or another, when we try to enable one feature of active directory 
-the connectivity seems to have performance issues, it's either failing or too
+the connectivity seems to have performance issues. The issues can be that 
+the network is either failing or too
 slow and we have two capture files obtained using any capture tool (wireshark,
-tcpdump, ...) of the two states of the network one question we can ask is
+tcpdump, ...) of the two states of the network. One question we can ask is
 how can we 
 analyze what changed in the network between the activation of the feature
 and when everything worked perfectly ?
@@ -331,7 +333,7 @@ and we are only interested in the SMB packets.
 ## Classical approach: view each file individually
 
 &nbsp; Thanks to the open source community effort we have a very powerful network
-analyzer: wireshark, there are other proprietary solutions, but generally they
+analyzer: wireshark. There are other proprietary solutions, but generally they
 lack many features that wireshark have. The idea is to find any misconfigured 
 thing by 
 browsing manually the first capture file then the second one, and since what
@@ -346,12 +348,14 @@ wireshark, and use a text differ to highlight changes, on Unix like systems a
 good diffs utility is `diff` present in the GNU coreutils. One example of a 
 program like that is pcap-diff [@isginfIsginfPcapdiff2019].
 
-## Our approach: Use the pdml output of Wireshark to make diffs
+## Our approach: Use the PDML output of Wireshark to make diffs
 Knowing the advantages and the disadvantages of the two previous approachs, 
 we tried to address all this using the XML output of Wireshark/Tshark in fact, 
 there are typically 3 interesting, human-readable formats:
-- text: each line is a packet and sub-packets are indented by one tab.
-We can obtain this with the command:
+
+### Text
+Each line is a packet and sub-packets are indented by one tab.
+We can obtain it with the command:
 
 ```shell
 tshark -2 -R "smb or smb2" -r /path/of/capture/file
@@ -359,24 +363,34 @@ tshark -2 -R "smb or smb2" -r /path/of/capture/file
 
 ![Textual output Wireshark](./img/tshark_std_output.png)
 
-- Json: the json file is an array of objects and each object is a packet, each
-packet contains many key/value pairs corresponding to a field or a subfield 
-of the protocol used (header, flags, length, ...)
 
+### Json
+The json file is an array of objects and each object is a packet, each
+packet contains many key/value pairs corresponding to a field or a subfield 
+of the protocol used (header, flags, length, ...).
+We can obtain it with the command:
 ```shell
 tshark -2 -R "smb or smb2" -r /path/of/capture/file -T json
 ```
 
-![Json output Wireshark](./img/tshark_json_output.png){width="75%"}
+![Json output Wireshark](./img/tshark_json_output.png){width="70%"}
 
-- XML (PDML): A PDML file contains multiple packets, denoted by the `<packet>` tag. A packet will contain multiple protocols, denoted by the `<proto>` tag.
+\pagebreak
+
+
+### XML (PDML)
+A PDML file contains multiple packets, denoted by the `<packet>` tag. A packet will contain multiple protocols, denoted by the `<proto>` tag.
 A protocol might contain one or more fields, denoted by the `<field>` tag. 
+We can obtain it with the command:
 
 ```shell
-tshark -2 -R "smb or smb2" -r /path/of/capture/file -T pdml
+tshark -2 -R "smb or smb2" -r /path/of/capture/file -T PDML
 ```
 
 ![XML output Wireshark](./img/tshark_xml_output.jpg)
+
+\pagebreak
+
 
 # Design of the solution
 
@@ -404,6 +418,9 @@ work standalone
 
 ![Use case diagram smbcmp-gui](./img/use_case_diagram_smbcmp.png){width="80%"}
 
+\pagebreak
+
+
 - **Stakeholders**
 The main stakeholder here are the people inside the company because it's an 
 internal tool open sourced.
@@ -416,13 +433,20 @@ internal tool open sourced.
   - smbcmp
 
 - **Use cases**
-- Open files
-- Permute buffers
-- Change settings
-- 
-It my belief that 
+- Open files : load the files inside the buffers
+- Permute buffers : exchange files
+- Change settings : like colors, diff engine
+- Search packets : search packet in each buffer
+
+### Class diagram 
+We have the following class diagram:
+
+![Class diagram](./img/class_diagram.png)
+
+\pagebreak
 
 ## Technologies used 
+
 ### For the command line interface
 The objective was to have as little dependencies as possible so in this part, 
 there is only an *optionnal* dependency: `lxml` one may ask why, if it's 
@@ -574,6 +598,112 @@ Framework | License | Documentation | Modern UI | Wysiwyg | Target | Native
 Because fo the requirements and the documentation, we ended up choosing 
 *WXpython* for the project.
 
+# Implementation
+For this part, we had to implement a few algorithms, here we hightlight 2 of
+those which are recursive:
+
+## Algorithm 1: recursive diffs between 2 nodes of the XML graph
+
+### Principle 
+We have two top-level packets `A` and `B`, we face the following cases:
+
+- **Cases where A and B have different numbers of children**
+
+In this case we identify each child, match those which are the same and 
+mark the remaining as either removed or added depending on which the parent,
+if it's `A` we mark added and if it's `B` we mark removed.
+
+- **1 Leaf node vs 1 Folder node**
+
+If not child_a.children or not child_b.children:
+In this case we just keep going deeper inside the folder node, and 
+we print all that as diffs.
+
+- **Terminal cases: 2 leaf nodes**
+
+If the nodes are roughly the same (just the values changed) we store this 
+change else we mark as two different lines.
+
+- **Recursive case: 2 Tree nodes**
+ 
+We call the function again on the two nodes.
+
+### Pseudo-code
+The pseudo-code is quite long, you can find it in [Appendix B](#appendix-b---recursive-PDML-diffs-algorithm)
+
+### Complexity analysis 
+We make a few assumptions, the packets `A` and `B` which are represented
+as trees have respectively n and m elements 
+
+#### Time complexity
+In the worst case, the packets aren't the same but have the same structure with
+the same number of nodes, in this case, we have to go to each leaf just to
+notice that the leafs aren't the same and marked the first one as added and the
+second one as removed. We have obviously O(n^2)
+
+
+#### Space complexity
+We store the both trees and use a constant space to make diffs, so O(n^2).
+
+## Algorithm 2: Circular search inside a non-circular list
+
+### Principle
+
+We have a list of strings (packets) `data` inside a `buffer` and we are looking
+for a certain string `text` and if we find it, (even a partial match) we update the `buffer` selected item and stop the search.
+
+In order to achieve that, we make a 
+fuzzy search (finding approximate substring matches inside a given list of strings) and 
+stop at the next occurrence, repeat this process while the user hit the search
+button and if we reach the bottom of the list, the search restart automatically
+at the top of the list.
+
+### Pseudo code
+```python
+    function search(text, rec=True):
+        """ Cyclic search inside summaries
+
+        Keyword arguments:
+
+        text -- expression searched
+        rec -- keep track of recursive calls
+        """
+        sel = buffer.GetSelection()
+
+        if rec:
+            search_index = sel
+        else:
+            search_index = -1
+
+        for i in range(search_index + 1, len(data) + 1):
+            #  edge case : The last packet is selected
+            if i >= len(data):
+                found = False
+                break
+
+            found = text.lower() in data[i].lower()
+            if found:
+                search_index = i
+                break
+
+        if not found:
+            if rec:
+                search(text, rec=False)
+        else:
+            buffer.SetSelection(search_index)
+```
+
+
+### Complexity analysis
+
+#### Time complexity
+If we assume that the list `data` has n elements and the max size of elements
+inside data is p ( p = max(data[i], 0 < i < n+1) ), in the worst case there are no matchs in the whole list, the complexity is then O(n).
+
+#### Space complexity
+The space corresponding is O(n)
+
+
 # Evaluation of results
 Typically, SMB 2 Protocol messages begin with a fixed-length SMB2 header that 
 is 
@@ -599,9 +729,13 @@ same type
 
 ![Plain text output for different command fields](./img/plain_text_different_command.png)
 
+\pagebreak
+
 ![PDML output for different command fields](./img/pdml_different_command.png)
 
-#### Interpretation
+\pagebreak
+
+- **Interpretation**
 As you can notice from the previous plain text output, diffs were done blocks
 by blocks instead of in this case line by line which lead to something like
 the `Credit Charge` field has only one minor change but in the plain text 
@@ -609,32 +743,42 @@ output it's considered as part of the 6 lines change while in this case
 the `Credit Charge: 0 -> 1` is clearly highlighted. Moreover, in the PDML
 output, the following changes are highlighted one at the time so that the user
 know exactly what really change without putting too much effort of making 
-the visual correspondance by himself.
+the visual correspondance by him
 
+\pagebreak
 ### Same command fields
 
 ![Plain text output for same command fields](./img/plain_text_same_command.png)
 
+\pagebreak
+
 ![PDML output for same command fields](./img/pdml_same_command.png)
 
-#### Interpretation
+\pagebreak
+
+- **Interpretation**
 Here it's even more visible, using the plain text output, it's very difficult
 to separate a field from his value, that's what you can notice from the first 
 output; the fields `Time for request`, `Preaut Hash` and `Current Time` are only
 changing values but with the first version they are highlighted as one line
 change while the second are hightlighted more precisely as values change.
 
+\pagebreak
+
 ## GUI
-One objective was to port to windows, here we not only did that but also ported
-to MacOS
+One objective was to port to windows, 
+the tests have been realized on Windows 10 Professional and Fedora Workstation
+31 the views are following:
 
 ### Windows
 ![Windows view smbcmp](./img/smbcmp_windows.png)
 
-### MacOS
+\pagebreak
 
 ### Linux
 ![Linux view smbcmp](./img/smbcmp_linux.png)
+
+\pagebreak
 
 
 # Prospect
@@ -708,8 +852,8 @@ features, the first are the ideas took on the idea list, then some of my ideas t
 This is for doing better and deeper diffs by ignoring indentation differences, adding
 ways to let users add/ignore rules, etc. 
 The XML output is known in the Wireshark world as PDML (Product Data Markup Language)
-after some researches, I found a resource explaining the specifications http://xml.coverpages.org/pdml.html
-I think that in order to do that, I'll use the ##-Tpdml## option of tshark and use the
+after some researches, I found a resource explaining the specifications http://xml.coverpages.org/PDML.html
+I think that in order to do that, I'll use the ##-TPDML## option of tshark and use the
 output to apply filters (add/ignore rules).
 
 ##### Add an html output 
@@ -818,149 +962,149 @@ what suits me the most, hence many contributions in web development).
 
 
 
-## Appendix B - Recursive pdml diffs algorithm
-![caption](image.jpg){width="50%"}
+## Appendix B - Recursive PDML diffs algorithm
 ```python
-    def smb_diff(self):
-        """Compute PDML diff and return DiffOutput instance"""
-        output = DiffOutput()
+function smb_diff():
+    """Compute PDML diff and return DiffOutput instance"""
 
-        def rec_diff(a, b, n=0):
-            final_eq = SAME
+    output = DiffOutput()
 
-            #
-            # Diff a folder attributes
-            #
+    function rec_diff(a, b, n=0):
+        final_eq = SAME
 
-            eq, ign = self.diff_attr_with_rules(a, b)
-            if eq == SAME:
-                # doesnt matter which
-                output.print_field(OUT_SAME, a, indent=n)
-            elif eq == MOD:
-                output.print_mod_field(a, b, indent=n)
-                if not ign:
-                    final_eq = max(final_eq, eq)
-            elif eq == DIFF:
-                output.dump(OUT_REM, a, ignored=ign, indent=n)
-                output.dump(OUT_ADD, b, ignored=ign, indent=n)
-                if not ign:
-                    final_eq = max(final_eq, eq)
-                return final_eq
+        #
+        # Diff a folder attributes
+        #
 
-            #
-            # Diff the children of the folder
-            #
+        eq, ign = diff_attr_with_rules(a, b)
+        if eq == SAME:
+            # doesnt matter which
+            output.print_field(OUT_SAME, a, indent=n)
+        elif eq == MOD:
+            output.print_mod_field(a, b, indent=n)
+            if not ign:
+                final_eq = max(final_eq, eq)
+        elif eq == DIFF:
+            output.dump(OUT_REM, a, ignored=ign, indent=n)
+            output.dump(OUT_ADD, b, ignored=ign, indent=n)
+            if not ign:
+                final_eq = max(final_eq, eq)
+            return final_eq
 
-            sm = difflib.SequenceMatcher(None, a.children, b.children)
-            for tag, i1, i2, j1, j2 in sm.get_opcodes():
-                if tag == 'delete':
-                    for child_a in a.children[i1:i2]:
-                        ign = self.ignored_with_rules(child_a)
-                        output.dump(OUT_REM, child_a, ignored=ign, indent=n+1)
+        #
+        # Diff the children of the folder
+        #
+
+        sm = difflib.SequenceMatcher(None, a.children, b.children)
+        for tag, i1, i2, j1, j2 in sm.get_opcodes():
+            if tag == 'delete':
+                for child_a in a.children[i1:i2]:
+                    ign = ignored_with_rules(child_a)
+                    output.dump(OUT_REM, child_a, ignored=ign, indent=n+1)
+                    if not ign:
+                        final_eq = max(final_eq, eq)
+                continue
+            elif tag == 'insert':
+                for child_b in b.children[j1:j2]:
+                    ign = ignored_with_rules(child_b)
+                    output.dump(OUT_ADD, child_b, ignored=ign, indent=n+1)
+                    if not ign:
+                        final_eq = max(final_eq, eq)
+                continue
+            elif tag == 'equal':
+                for child_a, child_b in zip_longest(a.children[i1:i2],
+                                                    b.children[j1:j2]):
+                    eq, ign = diff_field_with_rules(child_a, child_b)
+                    if eq == SAME:
+                        # doesnt matter which
+                        output.dump(OUT_SAME, child_a, indent=n+1)
+                    elif eq == MOD:
+                        output.print_mod_field(child_a, child_b,
+                                                ignored=ign, indent=n+1)
                         if not ign:
                             final_eq = max(final_eq, eq)
-                    continue
-                elif tag == 'insert':
-                    for child_b in b.children[j1:j2]:
-                        ign = self.ignored_with_rules(child_b)
+                    else:
+                        raise Exception("nodes should not be diff here")
+                continue
+            elif tag == 'replace':
+                for child_a, child_b in zip_longest(a.children[i1:i2],
+                                                    b.children[j1:j2]):
+
+                    #
+                    # Cases where A and B have different numbers
+                    # of children
+
+                    if child_a is None:
+                        # B has more children
+                        ign = ignored_with_rules(child_b)
                         output.dump(OUT_ADD, child_b, ignored=ign, indent=n+1)
                         if not ign:
                             final_eq = max(final_eq, eq)
-                    continue
-                elif tag == 'equal':
-                    for child_a, child_b in zip_longest(a.children[i1:i2],
-                                                        b.children[j1:j2]):
-                        eq, ign = self.diff_field_with_rules(child_a, child_b)
+                        continue
+
+                    if child_b is None:
+                        # A has more children
+                        ign = ignored_with_rules(child_a)
+                        output.dump(OUT_REM, child_a, ignored=ign, indent=n+1)
+                        if not ign:
+                            final_eq = max(final_eq, eq)
+                        continue
+
+                    #
+                    # Terminal cases: 2 leaf nodes
+                    #
+
+                    if not child_a.children and not child_b.children:
+                        eq, ign = diff_field_with_rules(child_a,
+                                                              child_b)
                         if eq == SAME:
                             # doesnt matter which
                             output.dump(OUT_SAME, child_a, indent=n+1)
                         elif eq == MOD:
                             output.print_mod_field(child_a, child_b,
-                                                   ignored=ign, indent=n+1)
+                                                    ignored=ign, indent=n+1)
                             if not ign:
                                 final_eq = max(final_eq, eq)
                         else:
-                            raise Exception("nodes should not be diff here")
-                    continue
-                elif tag == 'replace':
-                    for child_a, child_b in zip_longest(a.children[i1:i2],
-                                                        b.children[j1:j2]):
-
-                        #
-                        # Cases where A and B have different numbers
-                        # of children
-
-                        if child_a is None:
-                            # B has more children
-                            ign = self.ignored_with_rules(child_b)
-                            output.dump(OUT_ADD, child_b, ignored=ign, indent=n+1)
-                            if not ign:
-                                final_eq = max(final_eq, eq)
-                            continue
-
-                        if child_b is None:
-                            # A has more children
-                            ign = self.ignored_with_rules(child_a)
-                            output.dump(OUT_REM, child_a, ignored=ign, indent=n+1)
-                            if not ign:
-                                final_eq = max(final_eq, eq)
-                            continue
-
-                        #
-                        # Terminal cases: 2 leaf nodes
-                        #
-
-                        if not child_a.children and not child_b.children:
-                            eq, ign = self.diff_field_with_rules(child_a,
-                                                                 child_b)
-                            if eq == SAME:
-                                # doesnt matter which
-                                output.dump(OUT_SAME, child_a, indent=n+1)
-                            elif eq == MOD:
-                                output.print_mod_field(child_a, child_b,
-                                                       ignored=ign, indent=n+1)
-                                if not ign:
-                                    final_eq = max(final_eq, eq)
-                            else:
-                                output.dump(OUT_REM, child_a, ignored=ign,
-                                            indent=n+1)
-                                output.dump(OUT_ADD, child_b, ignored=ign,
-                                            indent=n+1)
-                                if not ign:
-                                    final_eq = max(final_eq, eq)
-                            continue
-
-
-                        #
-                        # 1 Leaf node vs 1 Folder node
-                        #
-
-                        if not child_a.children or not child_b.children:
-                            # doesn't make sense to diff deeper,
-                            # consider one has been removed
-                            # and the other added
-
-                            ign = self.ignored_with_rules(child_a) and \
-                                self.ignored_with_rules(child_b)
                             output.dump(OUT_REM, child_a, ignored=ign,
                                         indent=n+1)
                             output.dump(OUT_ADD, child_b, ignored=ign,
                                         indent=n+1)
                             if not ign:
-                                final_eq = max(final_eq, DIFF)
-                            continue
+                                final_eq = max(final_eq, eq)
+                        continue
 
-                        #
-                        # Recursive case: 2 Tree nodes
-                        #
 
-                        eq = rec_diff(child_a, child_b, n=n+1)
-                        final_eq = max(final_eq, eq)
+                    #
+                    # 1 Leaf node vs 1 Folder node
+                    #
 
-            return final_eq
+                    if not child_a.children or not child_b.children:
+                        # doesn't make sense to diff deeper,
+                        # consider one has been removed
+                        # and the other added
 
-        rec_diff(self.pkt_a, self.pkt_b)
-        return output
+                        ign = ignored_with_rules(child_a) and \
+                            ignored_with_rules(child_b)
+                        output.dump(OUT_REM, child_a, ignored=ign,
+                                    indent=n+1)
+                        output.dump(OUT_ADD, child_b, ignored=ign,
+                                    indent=n+1)
+                        if not ign:
+                            final_eq = max(final_eq, DIFF)
+                        continue
+
+                    #
+                    # Recursive case: 2 Tree nodes
+                    #
+
+                    eq = rec_diff(child_a, child_b, n=n+1)
+                    final_eq = max(final_eq, eq)
+
+        return final_eq
+
+    rec_diff(pkt_a, pkt_b)
+    return output
 ```
 
 # Bibliography
